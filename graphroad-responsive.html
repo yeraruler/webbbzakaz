@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GraphRoad · Ақтөбе–Хромтау</title>
+<meta name="description" content="Ақтөбе–Хромтау автожолындағы көлік ағынын графтар теориясы негізінде оңтайландыру: интерактивті 3D модель және Gemini ЖИ-көмекші.">
+<meta name="theme-color" content="#070b14">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b14; --bg2:#0b1220; --surf:#0f1829; --surf2:#142036; --line:rgba(148,170,210,.14);
+  --tx:#e8eefc; --mut:#93a1bd; --dim:#667391;
+  --amber:#fbbf24; --cyan:#22d3ee; --violet:#a78bfa; --green:#34d399; --yellow:#facc15; --orange:#fb923c; --red:#f87171;
+  --r:18px; --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+button,input,select,textarea{font:inherit}
+button,a,input,select,textarea{touch-action:manipulation}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(900px 500px at 85% -10%,rgba(34,211,238,.12),transparent 60%),
+  radial-gradient(700px 500px at -10% 20%,rgba(251,191,36,.08),transparent 60%),
+  radial-gradient(800px 600px at 50% 110%,rgba(167,139,250,.10),transparent 60%)}
+noscript{display:block;margin:16px auto;padding:14px 16px;width:min(560px,calc(100% - 24px));border:1px solid rgba(251,191,36,.45);border-radius:12px;background:rgba(251,191,36,.1);color:var(--tx);font-size:14px;text-align:center}
+a{color:inherit}
+.wrap{width:min(1200px,calc(100% - 32px));margin-inline:auto}
+section{padding:88px 0}
+h1,h2,h3{line-height:1.15;letter-spacing:-.02em}
+h2{font-size:clamp(28px,4vw,42px);font-weight:800;margin-bottom:14px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:12px;display:block}
+.lead{color:var(--mut);font-size:clamp(16px,1.6vw,19px);max-width:820px}
+.grad{background:linear-gradient(95deg,var(--amber),#fff 45%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:var(--r);padding:22px;backdrop-filter:blur(8px)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surf2);color:var(--tx);padding:11px 18px;border-radius:12px;font:600 14px var(--sans);cursor:pointer;text-decoration:none;transition:.2s}
+.btn:hover{border-color:rgba(251,191,36,.5);transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(95deg,var(--amber),#f59e0b);color:#1a1200;border-color:transparent}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:50;background:rgba(7,11,20,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none;letter-spacing:-.01em}
+.logo i{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--amber),var(--cyan));display:grid;place-items:center;color:#06101c;font-style:normal;font-family:var(--mono);font-size:13px}
+.links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.links::-webkit-scrollbar{display:none}
+.links a{color:var(--mut);text-decoration:none;font-size:14px;font-weight:500;padding:8px 12px;border-radius:9px;white-space:nowrap}
+.links a:hover{color:var(--tx);background:var(--surf)}
+.lang{display:flex;background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:3px}
+.lang button{background:none;border:0;color:var(--mut);font:700 12px var(--mono);padding:6px 10px;border-radius:7px;cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--amber);color:#1a1200}
+
+/* HERO */
+.hero{padding:72px 0 56px}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(32px,5vw,58px);font-weight:800;margin:6px 0 20px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:36px}
+.stat{padding:14px 16px}
+.stat b{display:block;font:800 26px var(--mono);color:var(--amber)}
+.stat span{font-size:12px;color:var(--mut)}
+.heroviz{aspect-ratio:1/.92;position:relative}
+.heroviz svg{width:100%;height:100%}
+.flow{stroke-dasharray:6 10;animation:flow 1.4s linear infinite}
+.flow.alt{animation-duration:2s}
+@keyframes flow{to{stroke-dashoffset:-32}}
+.pulse{animation:pulse 2.4s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{50%{transform:scale(1.35);opacity:.35}}
+
+/* THEORY */
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.cards3 h3{font-size:18px;margin:10px 0 8px}
+.cards3 p{color:var(--mut);font-size:15px}
+.badge{display:inline-block;font:700 12px var(--mono);color:var(--cyan);background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);padding:4px 10px;border-radius:99px}
+.konig{display:grid;grid-template-columns:.9fr 1.1fr;gap:24px;margin-top:16px;align-items:center}
+.konig svg{width:100%;max-height:260px}
+.konig figcaption{color:var(--mut);font-size:14px}
+.steps{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:30px;counter-reset:s}
+.step{position:relative;padding:16px 12px;text-align:center;font-size:13px;font-weight:600;counter-increment:s}
+.step::before{content:counter(s);display:block;font:800 22px var(--mono);color:var(--amber);margin-bottom:4px}
+
+/* MODEL */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+tr.total td{font-weight:700;color:var(--amber);border-bottom:0}
+.tw{overflow-x:auto}
+.note{margin-top:16px;padding:14px 16px;border-left:3px solid var(--amber);background:rgba(251,191,36,.06);border-radius:0 12px 12px 0;color:#d6dcec;font-size:14px}
+.formula{font:500 15px var(--mono);background:var(--bg2);border:1px solid var(--line);padding:14px 16px;border-radius:12px;margin:12px 0;overflow-x:auto;color:var(--cyan)}
+
+/* LAB */
+.labgrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:18px;margin-top:30px}
+.stage{position:relative;border-radius:var(--r);border:1px solid var(--line);overflow:hidden;min-height:520px;background:radial-gradient(120% 90% at 50% 0%,#0f1c33,#060a13)}
+#gl{position:absolute;inset:0;touch-action:pan-y;cursor:grab}
+#gl:active{cursor:grabbing}
+#gl canvas{display:block;width:100%;height:100%}
+.stagebar{position:absolute;left:12px;top:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:2}
+.stagebar .btn{background:rgba(10,16,28,.75);backdrop-filter:blur(8px)}
+.legend{position:absolute;left:12px;bottom:12px;z-index:2;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut);background:rgba(10,16,28,.75);padding:8px 12px;border-radius:10px;border:1px solid var(--line)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.hint{position:absolute;right:12px;bottom:12px;z-index:2;font-size:12px;color:var(--dim)}
+#tip{position:absolute;z-index:3;pointer-events:none;background:rgba(8,13,24,.95);border:1px solid rgba(251,191,36,.4);padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.5;display:none;max-width:260px}
+#tip b{color:var(--amber)}
+#glFallback{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:30px;color:var(--mut);z-index:1}
+.panel{display:flex;flex-direction:column;gap:16px}
+.ctrl label{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-bottom:6px}
+.ctrl label b{color:var(--amber);font-family:var(--mono)}
+input[type=range]{width:100%;accent-color:var(--amber)}
+.presets{display:flex;gap:8px;flex-wrap:wrap}
+.etbl input{width:100%;min-width:56px;background:var(--bg2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:6px 8px;font:500 13px var(--mono)}
+.etbl input.bad{border-color:var(--red)}
+.etbl td,.etbl th{padding:6px 4px}
+.etbl td:first-child{font-weight:700;white-space:nowrap;padding-right:8px}
+.etbl small{display:block;color:var(--dim);font-weight:400;font-size:11px}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+.kpi h3{font-size:13px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi .big{font:800 36px var(--mono);margin:6px 0 4px}
+.kpi .sub{color:var(--mut);font-size:13px}
+.kpi.main .big{color:var(--amber)} .kpi.alt .big{color:var(--violet)}
+.verdict{margin-top:16px;padding:18px 20px;border-radius:var(--r);border:1px solid var(--line);font-size:16px}
+.verdict.same{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.35)}
+.verdict.diff{background:rgba(251,191,36,.09);border-color:rgba(251,191,36,.45)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{font:600 12px var(--mono);padding:5px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--mut)}
+.chip b{color:var(--cyan)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.charts h3{font-size:15px;margin-bottom:4px}
+.charts p{font-size:13px;color:var(--mut);margin-top:8px}
+svg text.ax{fill:var(--mut);font:500 11px var(--mono)} svg text.ax2{fill:var(--dim);font:500 10px var(--mono)}
+svg .grid{stroke:var(--line);stroke-width:1} svg .bar-free{fill:#3b4a6b}
+.matrix td,.matrix th{text-align:center;font-family:var(--mono);font-size:12.5px}
+.matrix td.on{color:var(--tx);background:rgba(251,191,36,.07)}
+.matrix td.off{color:var(--dim)}
+
+/* AI */
+.ai{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:18px;margin-top:30px}
+.chat{display:flex;flex-direction:column;height:620px;padding:0;overflow:hidden}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;padding:12px 15px;border-radius:14px;font-size:14.5px;line-height:1.6}
+.msg p+p,.msg ul+p,.msg p+ul{margin-top:8px}
+.msg ul{padding-left:20px} .msg code{font-family:var(--mono);background:rgba(255,255,255,.08);padding:1px 5px;border-radius:5px}
+.msg h4{margin:6px 0 4px;color:var(--amber)}
+.msg.user{align-self:flex-end;background:linear-gradient(95deg,rgba(251,191,36,.2),rgba(251,191,36,.1));border:1px solid rgba(251,191,36,.3)}
+.msg.bot{align-self:flex-start;background:var(--surf2);border:1px solid var(--line)}
+.msg.sys{align-self:center;background:none;color:var(--dim);font-size:12.5px;text-align:center}
+.msg.err{align-self:flex-start;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);color:#fecaca}
+.dots{display:inline-flex;gap:4px}.dots i{width:6px;height:6px;border-radius:50%;background:var(--mut);animation:b 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{transform:translateY(-4px);opacity:.4}}
+.composer{border-top:1px solid var(--line);padding:12px;display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;background:var(--bg2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:11px 13px;font:400 14.5px var(--sans);max-height:140px;min-height:44px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:12px;color:var(--mut);font-weight:600}
+.field input,.field select{background:var(--bg2);border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:10px 12px;font:500 13.5px var(--mono);width:100%}
+.row{display:flex;gap:8px}
+.warn{font-size:12.5px;color:#fcd9a0;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.3);padding:10px 12px;border-radius:10px;margin-top:10px}
+.qs{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.qs button{text-align:left;background:var(--bg2);border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:10px 12px;font:500 13.5px var(--sans);cursor:pointer}
+.qs button:hover{border-color:rgba(34,211,238,.5)}
+.status{font:600 12px var(--mono);display:inline-flex;gap:6px;align-items:center;color:var(--mut)}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--dim)} .status.on i{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+/* CONCLUSION */
+.concl{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:30px}
+.concl ol,.concl ul{padding-left:20px;color:#cdd6ea;display:grid;gap:10px}
+.src li{color:var(--mut);font-size:14px;margin-bottom:6px}
+footer{padding:36px 0 60px;border-top:1px solid var(--line);color:var(--mut);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+@media (max-width:1000px){
+  .hero .wrap,.labgrid,.ai,.concl,.two,.konig{grid-template-columns:1fr}
+  .results,.cards3,.charts{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stage{min-height:420px} .heroviz{max-width:520px;margin-inline:auto}
+  .hero .wrap{gap:24px}
+}
+@media (max-width:700px){
+  html{scroll-padding-top:112px}
+  .wrap{width:min(100% - 24px,560px)}
+  section{padding:56px 0}
+  nav .wrap{height:auto;min-height:60px;flex-wrap:wrap;gap:8px;padding:8px 0}
+  .logo{flex:1 1 auto;min-width:0}
+  .lang{flex:0 0 auto}
+  .links{order:3;flex:0 0 100%;width:100%;padding:0 0 2px;gap:2px}
+  .links a{font-size:12px;padding:7px 10px}
+  .hero{padding:48px 0 36px}
+  .hero h1{font-size:clamp(30px,10vw,44px);margin-bottom:14px}
+  .hero .cta{display:grid;grid-template-columns:1fr;gap:9px;margin-top:22px}
+  .btn{justify-content:center;min-height:44px;padding:10px 14px}
+  .stats{gap:8px;margin-top:24px}
+  .stat{padding:12px}
+  .stat b{font-size:21px}
+  .stat span{font-size:11px}
+  .heroviz{width:100%;margin-top:4px}
+  .card{padding:16px}
+  .lead{font-size:15px}
+  .cards3,.two,.labgrid,.ai,.concl,.charts{gap:12px;margin-top:22px}
+  .steps{grid-template-columns:1fr;gap:8px;margin-top:22px}
+  .step{padding:12px}
+  .stage{min-height:340px;border-radius:14px}
+  .stagebar{left:8px;top:8px;right:8px}
+  .stagebar .btn{font-size:12px;min-height:36px;padding:7px 9px}
+  .legend{left:8px;right:8px;bottom:8px;gap:7px;padding:7px 9px;font-size:11px}
+  .hint{display:none}
+  .panel{gap:12px}
+  .results{gap:10px;margin-top:12px}
+  .kpi .big{font-size:29px}
+  .matrix{font-size:11px}
+  th,td{padding:8px 9px}
+  .chat{height:min(620px,70vh);min-height:440px}
+  .msgs{padding:14px}
+  .msg{max-width:96%;font-size:14px}
+  .composer{padding:9px;gap:6px}
+  .composer .btn{min-width:44px;padding-inline:10px}
+  .composer textarea{font-size:14px}
+  .row{flex-direction:column}
+  footer{padding:28px 0 40px}
+}
+@media (max-width:380px){
+  .wrap{width:calc(100% - 20px)}
+  .lang button{padding:6px 8px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stage{min-height:300px}
+  .stagebar{gap:4px}
+  .stagebar .btn{font-size:11px;padding-inline:7px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<noscript>Бұл бет дұрыс жұмыс істеуі үшін JavaScript қосылған Chrome немесе Safari браузерінде ашыңыз.<br>Осы файлды мессенджердің алдын ала қарау терезесінде ашпаңыз.</noscript>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top"><i>G</i><span>GraphRoad</span></a>
+    <div class="links">
+      <a href="#theory" data-i18n="nav.theory"></a>
+      <a href="#model" data-i18n="nav.model"></a>
+      <a href="#lab" data-i18n="nav.lab"></a>
+      <a href="#ai" data-i18n="nav.ai"></a>
+      <a href="#end" data-i18n="nav.end"></a>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="kk" aria-pressed="true">ҚАЗ</button>
+      <button type="button" data-lang="ru" aria-pressed="false">РУС</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow" data-i18n="hero.eyebrow"></span>
+      <h1><span class="grad" data-i18n="hero.title"></span></h1>
+      <p class="lead" data-i18n="hero.lead"></p>
+      <div class="cta">
+        <a class="btn pri" href="#lab" data-i18n="hero.cta1"></a>
+        <a class="btn" href="#ai" data-i18n="hero.cta2"></a>
+      </div>
+      <div class="stats">
+        <div class="card stat"><b>90</b><span data-i18n="stat.km"></span></div>
+        <div class="card stat"><b>4</b><span data-i18n="stat.nodes"></span></div>
+        <div class="card stat"><b>3</b><span data-i18n="stat.edges"></span></div>
+        <div class="card stat"><b>1736</b><span data-i18n="stat.euler"></span></div>
+      </div>
+    </div>
+    <div class="heroviz" aria-hidden="true">
+      <svg viewBox="0 0 480 440">
+        <defs>
+          <radialGradient id="hg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fbbf24" stop-opacity=".9"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+          <radialGradient id="hc" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#22d3ee" stop-opacity=".9"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+        </defs>
+        <g fill="none" stroke-linecap="round">
+          <path d="M60 300 L180 250 L300 280 L420 200" stroke="rgba(255,255,255,.08)" stroke-width="14"/>
+          <path class="flow" d="M60 300 L180 250 L300 280 L420 200" stroke="#fbbf24" stroke-width="3"/>
+          <path d="M60 300 Q220 90 420 200" stroke="rgba(255,255,255,.06)" stroke-width="12"/>
+          <path class="flow alt" d="M60 300 Q220 90 420 200" stroke="#a78bfa" stroke-width="2.5"/>
+        </g>
+        <g font-family="JetBrains Mono, monospace" font-weight="700" font-size="15" text-anchor="middle">
+          <circle class="pulse" cx="60" cy="300" r="30" fill="url(#hc)"/><circle cx="60" cy="300" r="13" fill="#22d3ee"/><text x="60" y="340" fill="#e8eefc">A</text>
+          <circle class="pulse" cx="180" cy="250" r="30" fill="url(#hg)"/><circle cx="180" cy="250" r="11" fill="#fbbf24"/><text x="180" y="288" fill="#e8eefc">B</text>
+          <circle class="pulse" cx="300" cy="280" r="30" fill="url(#hg)"/><circle cx="300" cy="280" r="11" fill="#fbbf24"/><text x="300" y="318" fill="#e8eefc">C</text>
+          <circle class="pulse" cx="420" cy="200" r="30" fill="url(#hc)"/><circle cx="420" cy="200" r="13" fill="#22d3ee"/><text x="420" y="240" fill="#e8eefc">D</text>
+          <circle cx="235" cy="125" r="9" fill="#a78bfa"/><text x="235" y="108" fill="#a78bfa">E</text>
+        </g>
+        <g font-family="JetBrains Mono, monospace" font-size="12" fill="#93a1bd" text-anchor="middle">
+          <text x="120" y="262" transform="rotate(-18 120 262)">34 км</text>
+          <text x="240" y="253" transform="rotate(10 240 253)">24 км</text>
+          <text x="364" y="228" transform="rotate(-20 364 228)">32 км</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- THEORY -->
+<section id="theory">
+  <div class="wrap">
+    <span class="eyebrow">01 · <span data-i18n="nav.theory"></span></span>
+    <h2 data-i18n="theory.h"></h2>
+    <p class="lead" data-i18n="theory.lead"></p>
+    <div class="cards3">
+      <div class="card"><span class="badge">1736</span><h3 data-i18n="th1.t"></h3><p data-i18n="th1.p"></p></div>
+      <div class="card"><span class="badge">V · E</span><h3 data-i18n="th2.t"></h3><p data-i18n="th2.p"></p></div>
+      <div class="card"><span class="badge">A→B→C→D</span><h3 data-i18n="th3.t"></h3><p data-i18n="th3.p"></p></div>
+    </div>
+    <figure class="card konig">
+      <svg viewBox="0 0 300 230" role="img" aria-label="Königsberg bridges graph">
+        <g fill="none" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round">
+          <path d="M150 30 Q122 70 78 100"/><path d="M150 30 Q132 80 90 114"/>
+          <path d="M150 200 Q122 160 78 126"/><path d="M150 200 Q132 150 90 112" />
+          <path d="M82 112 L228 112"/>
+          <path d="M150 30 Q220 50 232 100"/>
+          <path d="M150 200 Q220 180 232 124"/>
+        </g>
+        <g font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" text-anchor="middle" fill="#06101c">
+          <circle cx="150" cy="30" r="17" fill="#22d3ee"/><text x="150" y="35">N</text>
+          <circle cx="150" cy="200" r="17" fill="#22d3ee"/><text x="150" y="205">S</text>
+          <circle cx="76" cy="112" r="17" fill="#fbbf24"/><text x="76" y="117">I</text>
+          <circle cx="238" cy="112" r="17" fill="#a78bfa"/><text x="238" y="117">E</text>
+        </g>
+      </svg>
+      <figcaption data-i18n="konig.cap"></figcaption>
+    </figure>
+    <div class="steps">
+      <div class="card step" data-i18n="m1"></div><div class="card step" data-i18n="m2"></div><div class="card step" data-i18n="m3"></div>
+      <div class="card step" data-i18n="m4"></div><div class="card step" data-i18n="m5"></div><div class="card step" data-i18n="m6"></div>
+      <div class="card step" data-i18n="m7"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODEL -->
+<section id="model">
+  <div class="wrap">
+    <span class="eyebrow">02 · <span data-i18n="nav.model"></span></span>
+    <h2 data-i18n="model.h"></h2>
+    <p class="lead" data-i18n="model.lead"></p>
+    <div class="two">
+      <div class="card tw">
+        <table>
+          <thead><tr><th>№</th><th data-i18n="col.seg"></th><th data-i18n="col.edge"></th><th class="n" data-i18n="col.km"></th><th class="n" data-i18n="col.q"></th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td data-i18n="seg.AB"></td><td>A–B</td><td class="n">34</td><td class="n">500</td></tr>
+            <tr><td>2</td><td data-i18n="seg.BC"></td><td>B–C</td><td class="n">24</td><td class="n">650</td></tr>
+            <tr><td>3</td><td data-i18n="seg.CD"></td><td>C–D</td><td class="n">32</td><td class="n">700</td></tr>
+            <tr class="total"><td></td><td data-i18n="col.total"></td><td>A–D</td><td class="n">90</td><td class="n">—</td></tr>
+          </tbody>
+        </table>
+        <p class="note" data-i18n="model.note"></p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="formula.h" style="margin-bottom:6px"></h3>
+        <div class="formula">t = t₀ · (1 + 0,15 · (q / c)⁴)</div>
+        <p style="color:var(--mut);font-size:14px" data-i18n="formula.p"></p>
+        <div class="formula" style="color:var(--amber)">w(e) = t(e),&nbsp; min Σ w(e)</div>
+        <p style="color:var(--mut);font-size:14px" data-i18n="formula.p2"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAB -->
+<section id="lab">
+  <div class="wrap">
+    <span class="eyebrow">03 · <span data-i18n="nav.lab"></span></span>
+    <h2 data-i18n="lab.h"></h2>
+    <p class="lead" data-i18n="lab.lead"></p>
+
+    <div class="labgrid">
+      <div class="stage" id="stage">
+        <div id="gl" aria-label="3D graph of the road"></div>
+        <div class="stagebar">
+          <button class="btn sm" type="button" data-view="iso">3D</button>
+          <button class="btn sm" type="button" data-view="top" data-i18n="view.top"></button>
+          <button class="btn sm" type="button" data-view="side" data-i18n="view.side"></button>
+          <button class="btn sm" type="button" id="btnRot" aria-pressed="true" data-i18n="view.rot"></button>
+          <button class="btn sm" type="button" id="zin" aria-label="zoom in">+</button>
+          <button class="btn sm" type="button" id="zout" aria-label="zoom out">−</button>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--green)"></i><span data-i18n="lg.free"></span></span>
+          <span><i style="background:var(--yellow)"></i><span data-i18n="lg.dense"></span></span>
+          <span><i style="background:var(--orange)"></i><span data-i18n="lg.heavy"></span></span>
+          <span><i style="background:var(--red)"></i><span data-i18n="lg.jam"></span></span>
+        </div>
+        <div class="hint" data-i18n="hint.drag"></div>
+        <div id="tip"></div>
+        <div id="glFallback"><div><b data-i18n="gl.fail.t"></b><br><span data-i18n="gl.fail.p"></span></div></div>
+      </div>
+
+      <aside class="panel">
+        <div class="card">
+          <div class="ctrl">
+            <label for="mult"><span data-i18n="ctrl.mult"></span><b id="multV">×1,00</b></label>
+            <input type="range" id="mult" min="0.5" max="3" step="0.05" value="1">
+          </div>
+          <div class="ctrl" style="margin-top:14px">
+            <label for="capf"><span data-i18n="ctrl.capf"></span><b id="capfV">100%</b></label>
+            <input type="range" id="capf" min="40" max="100" step="5" value="100">
+          </div>
+          <div class="presets" style="margin-top:14px">
+            <button class="btn sm" type="button" data-preset="base" data-i18n="preset.base"></button>
+            <button class="btn sm" type="button" data-preset="peak" data-i18n="preset.peak"></button>
+            <button class="btn sm" type="button" data-preset="work" data-i18n="preset.work"></button>
+          </div>
+        </div>
+        <div class="card tw etbl">
+          <table>
+            <thead><tr><th data-i18n="tbl.edge"></th><th data-i18n="tbl.km"></th><th data-i18n="tbl.q"></th><th data-i18n="tbl.cap"></th><th data-i18n="tbl.v0"></th></tr></thead>
+            <tbody id="edgeBody"></tbody>
+          </table>
+          <button class="btn sm" type="button" id="resetEdges" style="margin-top:12px" data-i18n="tbl.reset"></button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="results" id="results"></div>
+    <div class="verdict" id="verdict" role="status"></div>
+    <div class="chips" id="steps"></div>
+
+    <div class="charts">
+      <div class="card"><h3 data-i18n="chart.t1"></h3><svg id="chart1" viewBox="0 0 520 270"></svg><p data-i18n="chart.p1"></p></div>
+      <div class="card"><h3 data-i18n="chart.t2"></h3><svg id="chart2" viewBox="0 0 520 270"></svg><p id="chart2p"></p></div>
+    </div>
+
+    <div class="card tw" style="margin-top:16px">
+      <h3 style="margin-bottom:10px" data-i18n="matrix.h"></h3>
+      <table class="matrix" id="matrix"></table>
+    </div>
+    <div style="margin-top:14px"><button class="btn" type="button" id="btnReport" data-i18n="report.btn"></button></div>
+  </div>
+</section>
+
+<!-- AI -->
+<section id="ai">
+  <div class="wrap">
+    <span class="eyebrow">04 · Gemini</span>
+    <h2 data-i18n="ai.h"></h2>
+    <p class="lead" data-i18n="ai.lead"></p>
+    <div class="ai">
+      <div class="card chat">
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <form class="composer" id="composer">
+          <textarea id="prompt" rows="1" data-i18n-ph="ai.ph" aria-label="message"></textarea>
+          <button class="btn pri" type="submit" id="send" data-i18n="ai.send"></button>
+        </form>
+      </div>
+      <div>
+        <div class="card">
+          <div class="status" id="aiStatus"><i></i><span></span></div>
+          <div class="field" style="margin-top:14px">
+            <label for="apiKey" data-i18n="ai.key"></label>
+            <div class="row">
+              <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…">
+              <button class="btn sm" type="button" id="showKey" aria-label="show">👁</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="model" data-i18n="ai.model"></label>
+            <select id="model">
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+              <option value="custom" data-i18n="ai.custom"></option>
+            </select>
+            <input id="customModel" type="text" placeholder="gemini-…" style="display:none;margin-top:6px" spellcheck="false">
+          </div>
+          <div class="row">
+            <button class="btn sm pri" type="button" id="saveKey" data-i18n="ai.save"></button>
+            <button class="btn sm" type="button" id="clearKey" data-i18n="ai.forget"></button>
+            <button class="btn sm" type="button" id="clearChat" data-i18n="ai.clear"></button>
+          </div>
+          <p class="warn" data-i18n="ai.warn"></p>
+          <p style="margin-top:10px;font-size:12.5px;color:var(--dim)"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" data-i18n="ai.getkey"></a></p>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <h3 style="font-size:15px" data-i18n="ai.try"></h3>
+          <div class="qs" id="qs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONCLUSION -->
+<section id="end">
+  <div class="wrap">
+    <span class="eyebrow">05 · <span data-i18n="nav.end"></span></span>
+    <h2 data-i18n="end.h"></h2>
+    <div class="concl">
+      <div class="card"><ol>
+        <li data-i18n="end.1"></li><li data-i18n="end.2"></li><li data-i18n="end.3"></li><li data-i18n="end.4"></li>
+      </ol></div>
+      <div class="card"><h3 style="margin-bottom:10px" data-i18n="next.h"></h3><ul>
+        <li data-i18n="next.1"></li><li data-i18n="next.2"></li><li data-i18n="next.3"></li><li data-i18n="next.4"></li>
+      </ul></div>
+    </div>
+    <h3 style="margin:44px 0 14px" data-i18n="src.h"></h3>
+    <ol class="src" style="padding-left:20px">
+      <li>Салғараева Г. И. Графтар теориясы: оқулық. – Алматы: Дәуір, 2013. – 256 б.</li>
+      <li>Төлеп Ә. С., Ескараева Б. И. Дискретті математика. Теория және практикум. – Шымкент, 2020. – 132 б.</li>
+      <li>Төлеп Ә. С., Ескараева Б. И. Дискретті математика. Тапсырмалар мен жаттығулар: оқу құралы. – Түркістан, 2021. – 221 б.</li>
+      <li>Шинтемирова А. У., Амантай Ж. Графтар теориясы. – Абай Мырзахметов атындағы Көкшетау университеті.</li>
+      <li>Базарбаева Ә. Б. Графтар теориясы мен комбинаторикада ықтималдық әдістің қолданылуы. – Атырау, 2022. – 55 б.</li>
+      <li>Бейісбай Н. Б. Графтар теориясының мектеп математикасында қолданылуы. – Л.Н. Гумилев атындағы Еуразия ұлттық университеті.</li>
+      <li>Оразов И., Алиханова Б., Шарипбай А. Математические основы информатики: учебное пособие. – Шымкент: Әлем, 2020. – 192 с.</li>
+      <li>Бейсеков Ж. Математикадан логикалық есептерді шығаруға арналған әдістемелік құрал. – Шымкент, 2017.</li>
+      <li>Bureau of Public Roads. Traffic Assignment Manual. – Washington, D.C., 1964. (BPR function)</li>
+    </ol>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><span data-i18n="foot.author"></span>: ____________ &nbsp;·&nbsp; <span data-i18n="foot.class"></span>: ____ &nbsp;·&nbsp; <span data-i18n="foot.teacher"></span>: ____________</div>
+    <div>GraphRoad · Ақтөбе–Хромтау · 2026</div>
+  </div>
+</footer>
+
+<noscript><p style="position:fixed;bottom:0;left:0;right:0;background:#7f1d1d;color:#fff;padding:12px;text-align:center">JavaScript is required.</p></noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ================= I18N ================= */
+var I18N = {
+kk:{
+ 'meta.title':'GraphRoad · Ақтөбе–Хромтау',
+ 'nav.theory':'Теория','nav.model':'Модель','nav.lab':'Зертхана','nav.ai':'ЖИ-көмекші','nav.end':'Қорытынды',
+ 'hero.eyebrow':'Ғылыми жоба · Графтар теориясы',
+ 'hero.title':'Ақтөбе–Хромтау автожолындағы көлік ағынын графтар теориясы негізінде оңтайландыру',
+ 'hero.lead':'Автожолды төбелер мен қабырғалардан тұратын граф ретінде қарастырамыз. Интерактивті 3D модель тек қашықтықты ғана емес, көлік ағынының қарқындылығы мен жолдың өткізу қабілетін де ескеріп, ең жылдам бағытты табады.',
+ 'hero.cta1':'Зертханаға өту','hero.cta2':'Gemini ЖИ-мен сөйлесу',
+ 'stat.km':'км жол ұзындығы','stat.nodes':'төбе (A, B, C, D)','stat.edges':'қыр (жол бөлігі)','stat.euler':'жыл · Эйлер, граф идеясы',
+ 'theory.h':'Эйлерден жол желісіне дейін',
+ 'theory.lead':'Граф – нысандар (төбелер) мен олардың арасындағы байланыстардан (қабырғалардан) тұратын математикалық модель. Сондықтан жол желісін сипаттауға өте ыңғайлы.',
+ 'th1.t':'Эйлер және Кёнигсберг көпірлері','th1.p':'1736 жылы швейцариялық математик Леонард Эйлер Кёнигсберг көпірлері есебін зерттей отырып, нысандар арасындағы байланысты математикалық түрде қарастырудың жаңа тәсілін ұсынды.',
+ 'th2.t':'Төбелер мен қабырғалар','th2.p':'Төбелер – қалалар, елді мекендер, жолайрықтар; қабырғалар – оларды байланыстыратын жолдар. Қозғалыс бағыты маңызды болса, қабырғаларға жебе қойылады.',
+ 'th3.t':'Жол желісі – граф','th3.p':'Автожолды нүктелер мен учаскелерден тұратын жүйе ретінде қарастырып, әр бөліктің ұзындығын, ағынын және жүктемесін салыстыруға болады.',
+ 'konig.cap':'Кёнигсберг көпірлері графы: 4 құрлық бөлігі (төбе) және 7 көпір (қабырға). Дәл осылай біз де жолды граф етіп сыздық.',
+ 'm1':'Жол желісі','m2':'Граф құру','m3':'Жол ұзындығын анықтау','m4':'Көлік ағынын есептеу','m5':'Жол жүктемесін бағалау','m6':'Бағыттарды салыстыру','m7':'Тиімді бағытты анықтау',
+ 'model.h':'Ақтөбе–Хромтау графтық моделі',
+ 'model.lead':'Зерттеу нысаны – Ақтөбеден Хромтауға дейінгі бағыт. A – Ақтөбе, B – Үлке, C – Новороссийское, D – Хромтау нүктелері граф төбесі, ал олардың арасындағы жол бөліктері қабырға болып алынды.',
+ 'col.seg':'Жол бөлігі','col.edge':'Қыр','col.km':'Қашықтық, км','col.q':'Көлік/сағ','col.total':'Жалпы',
+ 'seg.AB':'Ақтөбе – Үлке','seg.BC':'Үлке – Новороссийское','seg.CD':'Новороссийское – Хромтау',
+ 'model.note':'Слайдтағы нақты деректер: қашықтықтар мен көлік қарқындылығы. Өткізу қабілеті, жылдамдық және балама бағыт (95 км) – модельді көрсету үшін алынған шартты болжам. Оларды зертханада өзгертуге болады.',
+ 'formula.h':'Қыр салмағы – қозғалыс уақыты',
+ 'formula.p':'t₀ = L / v₀ – бос жолдағы уақыт, q – көлік ағынының қарқындылығы, c – жолдың өткізу қабілеті. Көлік инженериясында қолданылатын BPR функциясы жүктеме өскен сайын уақыттың шұғыл артатынын көрсетеді.',
+ 'formula.p2':'Қыр салмағы ретінде қашықтық емес, уақыт алынады. Ең жылдам бағытты Дейкстра алгоритмі табады.',
+ 'lab.h':'Интерактивті зертхана',
+ 'lab.lead':'Көлік ағынын, өткізу қабілетін, қашықтықты өзгертіп көріңіз: 3D графта жол түсі мен көліктер қозғалысы өзгереді, ал Дейкстра алгоритмі тиімді бағытты қайта есептейді.',
+ 'view.top':'Жоғарыдан','view.side':'Бүйірден','view.rot':'Авто-айналу',
+ 'lg.free':'Еркін (v/c < 0,6)','lg.dense':'Тығыз (< 0,8)','lg.heavy':'Ауыр (< 1)','lg.jam':'Кептеліс (≥ 1)',
+ 'hint.drag':'Сүйреп айналдырыңыз · қабырға үстіне меңзерді апарыңыз',
+ 'gl.fail.t':'3D көрінісі қол жетімсіз.','gl.fail.p':'Браузер WebGL немесе Three.js жүктелмеді (интернет қажет). Есептеулер мен графиктер жұмыс істей береді.',
+ 'ctrl.mult':'Негізгі жолдағы ағын өсімі','ctrl.capf':'Негізгі жолдың өткізу қабілеті',
+ 'preset.base':'Слайд деректері','preset.peak':'Жоғары ағын ×1,5','preset.work':'Жол жөндеу (50%)',
+ 'tbl.edge':'Қыр','tbl.km':'км','tbl.q':'авто/сағ','tbl.cap':'c','tbl.v0':'v₀',
+ 'tbl.reset':'Бастапқы мәндерге қайтару',
+ 'route.main':'Негізгі бағыт','route.alt':'Балама бағыт (шартты)',
+ 'kpi.min':'мин','kpi.avg':'орташа','kmh':'км/сағ','km':'км',
+ 'kpi.neck':'Ең тар жер','kpi.delay':'кідіріс',
+ 'dj.km':'Қашықтық бойынша қысқа жол','dj.time':'Уақыт бойынша жылдам жол (Дейкстра)',
+ 'verdict.same':'Екі өлшем бойынша да тиімді бағыт бірдей: <b>{r}</b>. Қазіргі жүктемеде бұл бағыт қысқа да, жылдам да.',
+ 'verdict.diff':'<b>Қысқа жол ≠ жылдам жол.</b> Қашықтық бойынша <b>{r1}</b> ({k1} км) тиімді көрінеді, бірақ уақыт бойынша <b>{r2}</b> жылдамырақ: айырмасы {d} мин. Жобаның негізгі қорытындысы осы.',
+ 'steps.h':'Дейкстра қадамдары','steps.v':'төбелер ретімен өңделді',
+ 'chart.t1':'Қыр бойынша уақыт: бос жол және нақты','chart.p1':'Сұр баған – бос жолдағы уақыт t₀, түсті баған – жүктемедегі нақты уақыт t (минут). Астында – v/c.',
+ 'chart.t2':'Жүктеме өскенде бағыттар уақыты',
+ 'chart2.cross':'Негізгі бағыт ағыны шамамен ×{m} өскенде (қазіргі өткізу қабілетінде) балама жолдан баяу бола бастайды.',
+ 'chart2.never':'Қарастырылған аралықта негізгі бағыт әрқашан балама жолдан жылдам.',
+ 'chart2.always':'Қазіргі параметрлерде негізгі бағыт бәрібір балама жолдан баяу.',
+ 'ax.main':'Негізгі','ax.alt':'Балама','ax.free':'t₀','ax.act':'t','ax.cur':'қазір',
+ 'matrix.h':'Іргелестік матрицасы (қыр салмағы: км / мин)',
+ 'report.btn':'Есепті жүктеу (.md)',
+ 'ai.h':'Gemini ЖИ-көмекші',
+ 'ai.lead':'Көмекші сіздің модельдегі ағымдағы деректерді көреді: нәтижені түсіндіреді, қорғауға сөз дайындайды, комиссия сұрақтарына дайындайды. API кілті болмаса – жергілікті талдау жұмыс істейді.',
+ 'ai.key':'Gemini API кілті','ai.model':'Модель','ai.custom':'Басқа модель…','ai.save':'Сақтау','ai.forget':'Кілтті өшіру','ai.clear':'Чатты тазалау',
+ 'ai.warn':'Кілт тек осы браузерде (localStorage) сақталады. Сайтты жариялағанда кілтті ешқашан кодқа жазбаңыз және бөтен адамға бермеңіз.',
+ 'ai.getkey':'API кілтін Google AI Studio-дан алу ↗','ai.try':'Тез сұрақтар',
+ 'ai.ph':'Сұрағыңызды жазыңыз… (Enter – жіберу, Shift+Enter – жаңа жол)','ai.send':'Жіберу',
+ 'ai.on':'Gemini қосулы','ai.off':'Жергілікті режим (кілт жоқ)',
+ 'ai.hello':'Сәлем! Мен жобаның ЖИ-көмекшісімін. Төменде тез сұрақтарды басып көріңіз немесе өз сұрағыңызды жазыңыз.',
+ 'ai.nokey':'API кілті енгізілмеген, сондықтан жергілікті талдау көрсетілді. Gemini жауабы үшін кілтті оң жақта енгізіңіз.',
+ 'ai.saved':'Кілт осы браузерде сақталды.','ai.forgot':'Кілт өшірілді.','ai.cleared':'Чат тазаланды.',
+ 'q1':'Нәтижені түсіндір','q2':'Неліктен ең қысқа жол әрдайым тиімді емес?','q3':'Қорғауға 1 минуттық сөз дайында','q4':'Комиссия қандай сұрақ қоюы мүмкін? Жауаптарымен бер','q5':'Жобаны қалай дамытуға болады?',
+ 'err.key':'API кілті қате немесе жарамсыз. Кілтті тексеріңіз.','err.perm':'Қолжетімділік жоқ (403). Кілт бұл модельге рұқсат бермейді немесе аймақ шектелген.',
+ 'err.model':'Модель табылмады (404). Модель атауын өзгертіп көріңіз (мысалы, gemini-2.5-flash).','err.quota':'Сұраныс шегі асып кетті (429). Біраз күтіп, қайталаңыз.',
+ 'err.net':'Желіге қосыла алмадым. Интернетті тексеріңіз.','err.timeout':'Жауап ұзақ күтілді. Қайталап көріңіз.','err.empty':'Модель бос жауап қайтарды.','err.block':'Жауап қауіпсіздік сүзгісімен бұғатталды.','err.gen':'Қате',
+ 'local.tag':'Жергілікті талдау',
+ 'local.1':'Қазіргі параметрлерде негізгі бағыт: {mk} км, шамамен {mt} мин (орташа {ms} км/сағ). Балама бағыт: {ak} км, шамамен {at} мин.',
+ 'local.2':'Ең тар жер – {e} қыры: v/c = {x}. {lvl}',
+ 'local.3':'Қашықтық бойынша қысқа жол – {r1}, уақыт бойынша жылдам жол – {r2}.',
+ 'local.4':'Қорытынды: жолды тек қашықтығына қарап бағалау жеткіліксіз, көлік ағынымен жүктемені де ескеру керек.',
+ 'lvl.0':'Жол бос, кептеліс жоқ.','lvl.1':'Ағын тығыз, бірақ қозғалыс тұрақты.','lvl.2':'Жүктеме жоғары, жылдамдық айтарлықтай төмендейді.','lvl.3':'Өткізу қабілеті асып кетті – кептеліс.',
+ 'tip.edge':'қыр','tip.vc':'v/c','tip.time':'уақыт','tip.free':'бос жолда',
+ 'end.h':'Қорытынды',
+ 'end.1':'Ақтөбе–Үлке, Үлке–Новороссийское және Новороссийское–Хромтау қашықтықтары зерттелді, жолдың жалпы ұзындығы 90 км болды.',
+ 'end.2':'Жол бөліктеріндегі көлік ағыны салыстырылып, жүктемесі жоғары учаскелер белгіленді.',
+ 'end.3':'Жолды тек қашықтығына қарап бағалау жеткіліксіз: көлік саны, жол жүктемесі және өткізу қабілеті де ескерілуі керек.',
+ 'end.4':'Графтар теориясы бірнеше бағытты салыстырып, көлік қозғалысы үшін тиімді бағытты таңдауға мүмкіндік береді.',
+ 'next.h':'Жобаны дамыту','next.1':'Нақты өлшеу деректерін (санауыш, GPS) қосу.','next.2':'Ақтөбе–Хромтау–Ұлғайсын бағытын толық граф ретінде кеңейту.','next.3':'Бағытты ескеретін бағытталған граф және уақыт бойынша өзгеретін салмақ.','next.4':'Басқа жолдарға қолдану: қала көшелері, мектепке дейінгі жол.',
+ 'src.h':'Пайдаланылған әдебиеттер','foot.author':'Оқушы','foot.class':'Сынып','foot.teacher':'Жетекші'
+},
+ru:{
+ 'meta.title':'GraphRoad · Актобе–Хромтау',
+ 'nav.theory':'Теория','nav.model':'Модель','nav.lab':'Лаборатория','nav.ai':'ИИ-помощник','nav.end':'Выводы',
+ 'hero.eyebrow':'Научный проект · Теория графов',
+ 'hero.title':'Оптимизация транспортного потока на автодороге Актобе–Хромтау на основе теории графов',
+ 'hero.lead':'Мы рассматриваем автодорогу как граф из вершин и рёбер. Интерактивная 3D-модель учитывает не только расстояние, но и интенсивность потока и пропускную способность, и находит самый быстрый маршрут.',
+ 'hero.cta1':'Перейти в лабораторию','hero.cta2':'Поговорить с Gemini ИИ',
+ 'stat.km':'км длина дороги','stat.nodes':'вершины (A, B, C, D)','stat.edges':'ребра (участки дороги)','stat.euler':'год · Эйлер, идея графа',
+ 'theory.h':'От Эйлера до дорожной сети',
+ 'theory.lead':'Граф – математическая модель из объектов (вершин) и связей между ними (рёбер). Поэтому он удобен для описания дорожной сети.',
+ 'th1.t':'Эйлер и кёнигсбергские мосты','th1.p':'В 1736 году швейцарский математик Леонард Эйлер, изучая задачу о кёнигсбергских мостах, предложил новый способ математически описывать связи между объектами.',
+ 'th2.t':'Вершины и рёбра','th2.p':'Вершины – города, населённые пункты, развязки; рёбра – дороги между ними. Если важно направление движения, на рёбрах ставят стрелки.',
+ 'th3.t':'Дорожная сеть – это граф','th3.p':'Автодорогу можно рассматривать как систему точек и участков и сравнивать длину, поток и загрузку каждого участка.',
+ 'konig.cap':'Граф кёнигсбергских мостов: 4 части суши (вершины) и 7 мостов (рёбра). Точно так же мы превратили дорогу в граф.',
+ 'm1':'Дорожная сеть','m2':'Построение графа','m3':'Определение длин участков','m4':'Расчёт транспортного потока','m5':'Оценка загрузки дороги','m6':'Сравнение маршрутов','m7':'Выбор оптимального маршрута',
+ 'model.h':'Графовая модель Актобе–Хромтау',
+ 'model.lead':'Объект исследования – маршрут от Актобе до Хромтау. Точки A – Актобе, B – Улке, C – Новороссийское, D – Хромтау приняты за вершины графа, а участки дороги между ними – за рёбра.',
+ 'col.seg':'Участок','col.edge':'Ребро','col.km':'Длина, км','col.q':'Авто/час','col.total':'Всего',
+ 'seg.AB':'Актобе – Улке','seg.BC':'Улке – Новороссийское','seg.CD':'Новороссийское – Хромтау',
+ 'model.note':'Реальные данные из презентации: длины участков и интенсивность потока. Пропускная способность, скорости и альтернативный маршрут (95 км) – условные допущения для демонстрации модели. Их можно менять в лаборатории.',
+ 'formula.h':'Вес ребра – время движения',
+ 'formula.p':'t₀ = L / v₀ – время на свободной дороге, q – интенсивность потока, c – пропускная способность. Функция BPR из транспортной инженерии показывает резкий рост времени при росте загрузки.',
+ 'formula.p2':'В качестве веса ребра берётся время, а не расстояние. Самый быстрый маршрут находит алгоритм Дейкстры.',
+ 'lab.h':'Интерактивная лаборатория',
+ 'lab.lead':'Меняйте поток, пропускную способность и длины: в 3D-графе меняются цвет дороги и движение машин, а алгоритм Дейкстры пересчитывает оптимальный маршрут.',
+ 'view.top':'Сверху','view.side':'Сбоку','view.rot':'Автовращение',
+ 'lg.free':'Свободно (v/c < 0,6)','lg.dense':'Плотно (< 0,8)','lg.heavy':'Тяжело (< 1)','lg.jam':'Пробка (≥ 1)',
+ 'hint.drag':'Тяните для поворота · наведите на ребро',
+ 'gl.fail.t':'3D-вид недоступен.','gl.fail.p':'Браузер не поддерживает WebGL или не загрузился Three.js (нужен интернет). Расчёты и графики продолжают работать.',
+ 'ctrl.mult':'Рост потока на основной дороге','ctrl.capf':'Пропускная способность основной дороги',
+ 'preset.base':'Данные слайдов','preset.peak':'Высокий поток ×1,5','preset.work':'Ремонт дороги (50%)',
+ 'tbl.edge':'Ребро','tbl.km':'км','tbl.q':'авто/ч','tbl.cap':'c','tbl.v0':'v₀',
+ 'tbl.reset':'Вернуть исходные значения',
+ 'route.main':'Основной маршрут','route.alt':'Альтернативный (условный)',
+ 'kpi.min':'мин','kpi.avg':'средняя','kmh':'км/ч','km':'км',
+ 'kpi.neck':'Узкое место','kpi.delay':'задержка',
+ 'dj.km':'Кратчайший по расстоянию','dj.time':'Быстрейший по времени (Дейкстра)',
+ 'verdict.same':'По обоим критериям оптимален один маршрут: <b>{r}</b>. При текущей загрузке он и короче, и быстрее.',
+ 'verdict.diff':'<b>Короткий путь ≠ быстрый путь.</b> По расстоянию выгоден <b>{r1}</b> ({k1} км), но по времени быстрее <b>{r2}</b>: разница {d} мин. Это и есть главный вывод проекта.',
+ 'steps.h':'Шаги Дейкстры','steps.v':'вершины обработаны по порядку',
+ 'chart.t1':'Время по рёбрам: свободная дорога и реальная','chart.p1':'Серый столбец – время на свободной дороге t₀, цветной – реальное время при загрузке t (минуты). Под ним – v/c.',
+ 'chart.t2':'Время маршрутов при росте нагрузки',
+ 'chart2.cross':'При росте потока примерно в ×{m} (при текущей пропускной способности) основной маршрут становится медленнее альтернативного.',
+ 'chart2.never':'В рассмотренном диапазоне основной маршрут всегда быстрее альтернативного.',
+ 'chart2.always':'При текущих параметрах основной маршрут уже медленнее альтернативного.',
+ 'ax.main':'Основной','ax.alt':'Альтернатива','ax.free':'t₀','ax.act':'t','ax.cur':'сейчас',
+ 'matrix.h':'Матрица смежности (вес ребра: км / мин)',
+ 'report.btn':'Скачать отчёт (.md)',
+ 'ai.h':'ИИ-помощник Gemini',
+ 'ai.lead':'Помощник видит текущие данные вашей модели: объясняет результат, готовит речь для защиты и вопросы комиссии. Без API-ключа работает локальный анализ.',
+ 'ai.key':'API-ключ Gemini','ai.model':'Модель','ai.custom':'Другая модель…','ai.save':'Сохранить','ai.forget':'Удалить ключ','ai.clear':'Очистить чат',
+ 'ai.warn':'Ключ хранится только в этом браузере (localStorage). При публикации сайта никогда не вшивайте ключ в код и не передавайте его другим.',
+ 'ai.getkey':'Получить API-ключ в Google AI Studio ↗','ai.try':'Быстрые вопросы',
+ 'ai.ph':'Напишите вопрос… (Enter – отправить, Shift+Enter – новая строка)','ai.send':'Отправить',
+ 'ai.on':'Gemini подключён','ai.off':'Локальный режим (нет ключа)',
+ 'ai.hello':'Привет! Я ИИ-помощник проекта. Нажмите на быстрый вопрос ниже или напишите свой.',
+ 'ai.nokey':'API-ключ не введён, поэтому показан локальный анализ. Для ответа Gemini введите ключ справа.',
+ 'ai.saved':'Ключ сохранён в этом браузере.','ai.forgot':'Ключ удалён.','ai.cleared':'Чат очищен.',
+ 'q1':'Объясни результат','q2':'Почему кратчайший путь не всегда оптимален?','q3':'Подготовь речь для защиты на 1 минуту','q4':'Какие вопросы может задать комиссия? С ответами','q5':'Как можно развить проект?',
+ 'err.key':'API-ключ неверный или недействителен. Проверьте ключ.','err.perm':'Нет доступа (403). Ключ не разрешён для этой модели или регион ограничен.',
+ 'err.model':'Модель не найдена (404). Попробуйте изменить название модели (например, gemini-2.5-flash).','err.quota':'Превышен лимит запросов (429). Подождите и повторите.',
+ 'err.net':'Не удалось подключиться к сети. Проверьте интернет.','err.timeout':'Слишком долгое ожидание ответа. Повторите.','err.empty':'Модель вернула пустой ответ.','err.block':'Ответ заблокирован фильтром безопасности.','err.gen':'Ошибка',
+ 'local.tag':'Локальный анализ',
+ 'local.1':'При текущих параметрах основной маршрут: {mk} км, около {mt} мин (средняя {ms} км/ч). Альтернативный: {ak} км, около {at} мин.',
+ 'local.2':'Узкое место – ребро {e}: v/c = {x}. {lvl}',
+ 'local.3':'Кратчайший по расстоянию – {r1}, быстрейший по времени – {r2}.',
+ 'local.4':'Вывод: оценивать дорогу только по длине недостаточно, нужно учитывать транспортный поток и загрузку.',
+ 'lvl.0':'Дорога свободна, пробок нет.','lvl.1':'Поток плотный, но движение стабильное.','lvl.2':'Загрузка высокая, скорость заметно падает.','lvl.3':'Пропускная способность превышена – пробка.',
+ 'tip.edge':'ребро','tip.vc':'v/c','tip.time':'время','tip.free':'на свободной',
+ 'end.h':'Выводы',
+ 'end.1':'Изучены расстояния Актобе–Улке, Улке–Новороссийское и Новороссийское–Хромтау, общая длина дороги – 90 км.',
+ 'end.2':'Сравнён транспортный поток на участках и отмечены наиболее загруженные.',
+ 'end.3':'Оценивать дорогу только по длине недостаточно: нужно учитывать число машин, загрузку и пропускную способность.',
+ 'end.4':'Теория графов позволяет сравнить несколько маршрутов и выбрать оптимальный для движения.',
+ 'next.h':'Развитие проекта','next.1':'Добавить реальные измерения (счётчики, GPS).','next.2':'Расширить граф до полного маршрута Актобе–Хромтау–Улгайсын.','next.3':'Ориентированный граф с учётом направления и весами, меняющимися по времени.','next.4':'Применить к другим дорогам: улицы города, путь до школы.',
+ 'src.h':'Список литературы','foot.author':'Ученик','foot.class':'Класс','foot.teacher':'Руководитель'
+}};
+
+var NODE_NAMES = {
+ kk:{A:'Ақтөбе',B:'Үлке',C:'Новороссийское',D:'Хромтау',E:'Балама түйін'},
+ ru:{A:'Актобе',B:'Улке',C:'Новороссийское',D:'Хромтау',E:'Альт. узел'}
+};
+
+var lang='kk';
+try{ var sl=localStorage.getItem('gr_lang'); if(sl==='ru'||sl==='kk') lang=sl; }catch(e){}
+function t(k,p){
+  var s=(I18N[lang]&&I18N[lang][k]); if(s==null) s=(I18N.kk[k]!=null?I18N.kk[k]:k);
+  if(p){ for(var key in p){ s=s.split('{'+key+'}').join(p[key]); } }
+  return s;
+}
+function nodeName(id){ return NODE_NAMES[lang][id]||id; }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmt(n,d){ if(d==null)d=1; return Number(n).toFixed(d).replace('.',','); }
+function $(s,r){return (r||document).querySelector(s);} function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+
+/*CORE_START*/
+var NODE_IDS=['A','B','C','D','E'];
+var LEVEL_COL=['#34d399','#facc15','#fb923c','#f87171'];
+var DEFAULT_EDGES=[
+ {id:'AB',a:'A',b:'B',km:34,q:500,cap:1000,v0:90,route:'main'},
+ {id:'BC',a:'B',b:'C',km:24,q:650,cap:1000,v0:90,route:'main'},
+ {id:'CD',a:'C',b:'D',km:32,q:700,cap:1000,v0:90,route:'main'},
+ {id:'AE',a:'A',b:'E',km:45,q:300,cap:900,v0:80,route:'alt'},
+ {id:'ED',a:'E',b:'D',km:50,q:250,cap:900,v0:80,route:'alt'}
+];
+function cloneEdges(src){ return src.map(function(e){ return Object.assign({},e); }); }
+function bpr(t0,x){ return t0*(1+0.15*Math.pow(x,4)); }
+function levelOf(x){ return x<0.6?0:x<0.8?1:x<1?2:3; }
+function computeEdge(e,mult,capF){
+  var m=e.route==='main';
+  var q=e.q*(m?mult:1), c=e.cap*(m?capF:1);
+  var x=q/c, t0=e.km/e.v0*60, tt=bpr(t0,x);
+  return Object.assign({},e,{qEff:q,cEff:c,x:x,t0:t0,t:tt,speed:e.km/tt*60,level:levelOf(x)});
+}
+/* Dijkstra on an undirected graph. edges: [{id,a,b,w}] */
+function dijkstra(nodes,edges,src,dst){
+  var dist={},prev={},prevEdge={},done={},steps=[],i;
+  nodes.forEach(function(n){dist[n]=Infinity;}); dist[src]=0;
+  for(i=0;i<nodes.length;i++){
+    var u=null,best=Infinity;
+    nodes.forEach(function(n){ if(!done[n]&&dist[n]<best){best=dist[n];u=n;} });
+    if(u===null) break;
+    done[u]=true; steps.push({node:u,dist:dist[u]});
+    if(u===dst) break;
+    edges.forEach(function(e){
+      var v=null; if(e.a===u) v=e.b; else if(e.b===u) v=e.a; if(v===null||done[v]) return;
+      if(dist[u]+e.w<dist[v]){ dist[v]=dist[u]+e.w; prev[v]=u; prevEdge[v]=e.id; }
+    });
+  }
+  if(!isFinite(dist[dst])) return {path:[],edgeIds:[],total:Infinity,steps:steps};
+  var path=[dst],eids=[],cur=dst;
+  while(cur!==src){ eids.unshift(prevEdge[cur]); cur=prev[cur]; path.unshift(cur); }
+  return {path:path,edgeIds:eids,total:dist[dst],steps:steps};
+}
+function routeStats(list){
+  var km=0,tm=0,t0=0,worst=null;
+  list.forEach(function(e){ km+=e.km; tm+=e.t; t0+=e.t0; if(!worst||e.x>worst.x) worst=e; });
+  return {km:km,t:tm,t0:t0,speed:tm>0?km/tm*60:0,delay:tm-t0,worst:worst};
+}
+function mainTimeAt(edges,capF,m){
+  var s=0; edges.forEach(function(e){ if(e.route==='main') s+=computeEdge(e,m,capF).t; }); return s;
+}
+function crossover(edges,capF,altT){
+  var prevM=null,prevD=null;
+  for(var m=0.5;m<=3.0001;m+=0.05){
+    var d=mainTimeAt(edges,capF,m)-altT;
+    if(d>0){ if(prevM===null) return {kind:'always'}; var f=-prevD/(d-prevD); return {kind:'cross',m:prevM+(m-prevM)*f}; }
+    prevM=m; prevD=d;
+  }
+  return {kind:'never'};
+}
+function analyze(edges,mult,capF){
+  var E=edges.map(function(e){return computeEdge(e,mult,capF);});
+  var byId={}; E.forEach(function(e){byId[e.id]=e;});
+  var dT=dijkstra(NODE_IDS,E.map(function(e){return {id:e.id,a:e.a,b:e.b,w:e.t};}),'A','D');
+  var dK=dijkstra(NODE_IDS,E.map(function(e){return {id:e.id,a:e.a,b:e.b,w:e.km};}),'A','D');
+  var main=routeStats(E.filter(function(e){return e.route==='main';}));
+  var alt=routeStats(E.filter(function(e){return e.route==='alt';}));
+  return {E:E,byId:byId,dT:dT,dK:dK,main:main,alt:alt,cross:crossover(edges,capF,alt.t)};
+}
+/*CORE_END*/
+
+/* ================= STATE ================= */
+var state={mult:1,capF:1,edges:cloneEdges(DEFAULT_EDGES)};
+var A=null; /* last analysis */
+
+function pathStr(p){ return p.join('→'); }
+function routeKeyOf(path){ return path.indexOf('E')>=0?'alt':'main'; }
+function routeLabel(path){ return routeKeyOf(path)==='alt'?t('route.alt'):t('route.main'); }
+
+/* ================= RENDER: RESULTS ================= */
+function renderEdgeTable(){
+  var h='';
+  state.edges.forEach(function(e){
+    h+='<tr><td>'+e.a+'–'+e.b+'<small>'+esc(nodeName(e.a))+' – '+esc(nodeName(e.b))+'</small></td>';
+    [['km',1,500],['q',0,10000],['cap',100,6000],['v0',20,140]].forEach(function(f){
+      h+='<td><input type="number" inputmode="decimal" data-edge="'+e.id+'" data-f="'+f[0]+'" min="'+f[1]+'" max="'+f[2]+'" value="'+e[f[0]]+'" aria-label="'+e.id+' '+f[0]+'"></td>';
+    });
+    h+='</tr>';
+  });
+  $('#edgeBody').innerHTML=h;
+}
+
+function kpiCard(cls,title,r,path){
+  var w=r.worst;
+  return '<div class="card kpi '+cls+'"><h3>'+esc(title)+'</h3>'+
+    '<div class="big">'+fmt(r.t,1)+' <span style="font-size:15px;color:var(--mut)">'+t('kpi.min')+'</span></div>'+
+    '<div class="sub">'+esc(pathStr(path))+' · '+fmt(r.km,0)+' '+t('km')+' · '+t('kpi.avg')+' '+fmt(r.speed,0)+' '+t('kmh')+'</div>'+
+    '<div class="sub" style="margin-top:6px">'+t('kpi.neck')+': <b style="color:'+LEVEL_COL[w.level]+'">'+w.a+'–'+w.b+'</b> (v/c '+fmt(w.x,2)+') · '+t('kpi.delay')+' +'+fmt(r.delay,1)+' '+t('kpi.min')+'</div></div>';
+}
+
+function renderResults(){
+  var a=A, bestKey=routeKeyOf(a.dT.path), kmKey=routeKeyOf(a.dK.path);
+  var h=kpiCard('main',t('route.main'),a.main,['A','B','C','D'])+kpiCard('alt',t('route.alt'),a.alt,['A','E','D']);
+  h+='<div class="card kpi"><h3>Dijkstra</h3><div class="sub" style="margin-top:8px">'+t('dj.km')+':</div>'+
+     '<div style="font:700 17px var(--mono);color:var(--cyan)">'+esc(pathStr(a.dK.path))+' · '+fmt(a.dK.total,0)+' '+t('km')+'</div>'+
+     '<div class="sub" style="margin-top:10px">'+t('dj.time')+':</div>'+
+     '<div style="font:700 17px var(--mono);color:var(--amber)">'+esc(pathStr(a.dT.path))+' · '+fmt(a.dT.total,1)+' '+t('kpi.min')+'</div></div>';
+  $('#results').innerHTML=h;
+
+  var v=$('#verdict');
+  if(bestKey===kmKey){
+    v.className='verdict same';
+    v.innerHTML=t('verdict.same',{r:esc(routeLabel(a.dT.path)+' '+pathStr(a.dT.path))});
+  }else{
+    v.className='verdict diff';
+    var d=Math.abs(a.main.t-a.alt.t);
+    v.innerHTML=t('verdict.diff',{r1:esc(routeLabel(a.dK.path)+' '+pathStr(a.dK.path)),k1:fmt(a.dK.total,0),r2:esc(routeLabel(a.dT.path)+' '+pathStr(a.dT.path)),d:fmt(d,1)});
+  }
+  $('#steps').innerHTML='<span class="chip" style="border:0;background:none">'+t('steps.h')+':</span>'+a.dT.steps.map(function(s,i){
+    return '<span class="chip">'+(i+1)+'. <b>'+s.node+'</b> '+fmt(s.dist,1)+'</span>';
+  }).join('');
+}
+
+function renderMatrix(){
+  var h='<thead><tr><th></th>'+NODE_IDS.map(function(n){return '<th>'+n+'</th>';}).join('')+'</tr></thead><tbody>';
+  NODE_IDS.forEach(function(r){
+    h+='<tr><th>'+r+'</th>';
+    NODE_IDS.forEach(function(c){
+      var e=A.E.filter(function(x){return (x.a===r&&x.b===c)||(x.a===c&&x.b===r);})[0];
+      if(r===c) h+='<td class="off">0</td>';
+      else if(e) h+='<td class="on">'+fmt(e.km,0)+' / '+fmt(e.t,1)+'</td>';
+      else h+='<td class="off">∞</td>';
+    });
+    h+='</tr>';
+  });
+  $('#matrix').innerHTML=h+'</tbody>';
+}
+
+/* ================= CHARTS ================= */
+function chart1(){
+  var W=520,H=270,pl=40,pr=10,pt=26,pb=48,iw=W-pl-pr,ih=H-pt-pb;
+  var maxV=Math.max.apply(null,A.E.map(function(e){return e.t;}))*1.15, n=A.E.length, gw=iw/n, bw=Math.min(24,gw/2.5), s='', i;
+  for(i=0;i<=4;i++){ var y=pt+ih-ih*i/4; s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="grid"/><text x="'+(pl-6)+'" y="'+(y+4)+'" class="ax" text-anchor="end">'+Math.round(maxV*i/4)+'</text>'; }
+  s+='<text x="'+pl+'" y="12" class="ax">'+t('kpi.min')+'</text>';
+  s+='<rect x="'+(W-170)+'" y="4" width="9" height="9" rx="2" class="bar-free"/><text x="'+(W-157)+'" y="12" class="ax">'+t('ax.free')+'</text><rect x="'+(W-110)+'" y="4" width="9" height="9" rx="2" fill="#fbbf24"/><text x="'+(W-97)+'" y="12" class="ax">'+t('ax.act')+'</text>';
+  A.E.forEach(function(e,k){
+    var cx=pl+gw*k+gw/2,h0=ih*e.t0/maxV,h1=ih*e.t/maxV;
+    s+='<rect x="'+(cx-bw-2)+'" y="'+(pt+ih-h0)+'" width="'+bw+'" height="'+h0+'" rx="3" class="bar-free"/>'+
+       '<rect x="'+(cx+2)+'" y="'+(pt+ih-h1)+'" width="'+bw+'" height="'+h1+'" rx="3" fill="'+LEVEL_COL[e.level]+'"/>'+
+       '<text x="'+cx+'" y="'+(H-pb+16)+'" class="ax" text-anchor="middle">'+e.a+'–'+e.b+'</text>'+
+       '<text x="'+cx+'" y="'+(H-pb+30)+'" class="ax2" text-anchor="middle">'+fmt(e.x,2)+'</text>';
+  });
+  $('#chart1').innerHTML=s;
+}
+function chart2(){
+  var W=520,H=270,pl=44,pr=14,pt=22,pb=40,iw=W-pl-pr,ih=H-pt-pb,pts=[],m,i;
+  for(m=0.5;m<=3.0001;m+=0.05) pts.push([m,mainTimeAt(state.edges,state.capF,m)]);
+  var altT=A.alt.t, vals=pts.map(function(p){return p[1];}).concat([altT]);
+  var ymin=Math.floor(Math.min.apply(null,vals)*0.9/10)*10, ymax=Math.ceil(Math.max.apply(null,vals)*1.05/10)*10;
+  function X(v){return pl+iw*(v-0.5)/2.5;} function Y(v){return pt+ih-ih*(v-ymin)/(ymax-ymin);}
+  var s='';
+  for(i=0;i<=4;i++){ var yv=ymin+(ymax-ymin)*i/4,y=Y(yv); s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="grid"/><text x="'+(pl-6)+'" y="'+(y+4)+'" class="ax" text-anchor="end">'+Math.round(yv)+'</text>'; }
+  [0.5,1,1.5,2,2.5,3].forEach(function(v){ s+='<text x="'+X(v)+'" y="'+(H-pb+16)+'" class="ax" text-anchor="middle">×'+fmt(v,1)+'</text>'; });
+  s+='<text x="'+pl+'" y="12" class="ax">'+t('kpi.min')+'</text>';
+  s+='<polyline fill="none" stroke="#fbbf24" stroke-width="2.6" stroke-linejoin="round" points="'+pts.map(function(p){return X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1);}).join(' ')+'"/>';
+  s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+Y(altT)+'" y2="'+Y(altT)+'" stroke="#a78bfa" stroke-width="2.2" stroke-dasharray="6 5"/>';
+  s+='<text x="'+(W-pr-4)+'" y="'+(Y(altT)-6)+'" class="ax" text-anchor="end" fill="#a78bfa" style="fill:#a78bfa">'+t('ax.alt')+'</text>';
+  s+='<text x="'+(pl+6)+'" y="'+(Y(pts[0][1])-8)+'" class="ax" style="fill:#fbbf24">'+t('ax.main')+'</text>';
+  var cx=X(state.mult);
+  s+='<line x1="'+cx+'" x2="'+cx+'" y1="'+pt+'" y2="'+(pt+ih)+'" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="'+cx+'" cy="'+Y(mainTimeAt(state.edges,state.capF,state.mult))+'" r="5" fill="#22d3ee"/>';
+  var co=A.cross, msg='';
+  if(co.kind==='cross'){ s+='<circle cx="'+X(co.m)+'" cy="'+Y(altT)+'" r="6" fill="none" stroke="#fff" stroke-width="2"/>'; msg=t('chart2.cross',{m:fmt(co.m,2)}); }
+  else msg=co.kind==='never'?t('chart2.never'):t('chart2.always');
+  $('#chart2').innerHTML=s; $('#chart2p').textContent=msg;
+}
+
+/* ================= UPDATE ================= */
+function update(){
+  A=analyze(state.edges,state.mult,state.capF);
+  $('#multV').textContent='×'+fmt(state.mult,2); $('#capfV').textContent=Math.round(state.capF*100)+'%';
+  renderResults(); renderMatrix(); chart1(); chart2(); Scene3D.update(A);
+}
+
+/* ================= 3D SCENE ================= */
+var Scene3D=(function(){
+  var ok=false,renderer,scene,camera,group,carGroup,raycaster,pointer,hits=[],lanes={},glows={},nodes={},cars=[],clock,visible=true,dragging=false;
+  var POS={A:[-14,0,0],B:[-3.8,0,-1],C:[3.4,0,1.2],D:[13,0,0],E:[-0.5,0,10]};
+  var NCOL={A:0x22d3ee,B:0xfbbf24,C:0xfbbf24,D:0x22d3ee,E:0xa78bfa};
+  var cam={th:-0.6,ph:1.0,r:36,tth:-0.6,tph:1.0,tr:36,auto:true,target:null};
+  var host,tipEl,ptrs={},lastPinch=0,lastX=0,lastY=0,downX=0,downY=0,reduce=false;
+  try{ reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+  if(reduce) cam.auto=false;
+
+  function v3(n){ var p=POS[n]; return new THREE.Vector3(p[0],p[1],p[2]); }
+  function makeCurve(e){
+    var p0=v3(e.a),p1=v3(e.b),pts=[p0],i,k=e.id.charCodeAt(0)+e.id.charCodeAt(1);
+    for(i=1;i<=2;i++){ var f=i/3, p=p0.clone().lerp(p1,f); p.x+=Math.sin(k+i*1.7)*0.35; p.z+=Math.cos(k*1.3+i*2.1)*0.55; pts.push(p); }
+    pts.push(p1); return new THREE.CatmullRomCurve3(pts,false,'catmullrom',0.5);
+  }
+  function labelTexture(id){
+    var c=document.createElement('canvas'); c.width=360; c.height=170; var g=c.getContext('2d');
+    g.fillStyle='rgba(8,14,26,.88)'; g.strokeStyle='#'+('000000'+NCOL[id].toString(16)).slice(-6); g.lineWidth=4;
+    var x=6,y=6,w=348,h=158,r=26; g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle='#ffffff'; g.textAlign='center'; g.font='800 72px Inter, Arial, sans-serif'; g.fillText(id,180,92);
+    g.fillStyle='#b8c4dd'; g.font='600 34px Inter, Arial, sans-serif'; g.fillText(nodeName(id),180,138);
+    var tx=new THREE.CanvasTexture(c); tx.anisotropy=4; return tx;
+  }
+  function relabel(){
+    if(!ok) return;
+    Object.keys(nodes).forEach(function(id){ var s=nodes[id].sprite; if(s.material.map) s.material.map.dispose(); s.material.map=labelTexture(id); s.material.needsUpdate=true; });
+  }
+  function init(){
+    host=$('#gl'); tipEl=$('#tip');
+    if(!window.THREE){ fail(); return; }
+    try{
+      renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+    }catch(e){ fail(); return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2)); renderer.setClearColor(0x000000,0);
+    host.appendChild(renderer.domElement);
+    scene=new THREE.Scene(); scene.fog=new THREE.FogExp2(0x070b14,0.011);
+    camera=new THREE.PerspectiveCamera(42,1,0.1,300); cam.target=new THREE.Vector3(0,0,3.5);
+    scene.add(new THREE.AmbientLight(0x8fa6d4,0.75));
+    var dl=new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(8,18,10); scene.add(dl);
+    var pl1=new THREE.PointLight(0x22d3ee,0.9,60); pl1.position.set(-18,8,6); scene.add(pl1);
+    var pl2=new THREE.PointLight(0xfbbf24,0.8,60); pl2.position.set(16,8,-6); scene.add(pl2);
+    group=new THREE.Group(); scene.add(group); carGroup=new THREE.Group(); group.add(carGroup);
+
+    var grid=new THREE.GridHelper(80,64,0x1d3a63,0x112038); grid.position.y=-0.06; grid.material.transparent=true; grid.material.opacity=0.55; group.add(grid);
+    var sp=[],i; for(i=0;i<700;i++){ var a=Math.random()*Math.PI*2,rad=14+Math.random()*60; sp.push(Math.cos(a)*rad,Math.random()*22+1,Math.sin(a)*rad); }
+    var sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
+    group.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0x7fa6ff,size:0.18,transparent:true,opacity:0.7,sizeAttenuation:true})));
+
+    state.edges.forEach(function(e){
+      var curve=makeCurve(e); e._curve=curve;
+      var bed=new THREE.Mesh(new THREE.TubeGeometry(curve,56,0.62,10,false),new THREE.MeshStandardMaterial({color:0x1a2438,roughness:0.9,metalness:0.1}));
+      bed.scale.y=0.16; group.add(bed);
+      var lane=new THREE.Mesh(new THREE.TubeGeometry(curve,56,0.17,8,false),new THREE.MeshStandardMaterial({color:0x34d399,emissive:0x34d399,emissiveIntensity:0.7,roughness:0.4}));
+      lane.position.y=0.1; group.add(lane); lanes[e.id]=lane;
+      var glow=new THREE.Mesh(new THREE.TubeGeometry(curve,56,0.42,10,false),new THREE.MeshBasicMaterial({color:0x9ff3ff,transparent:true,opacity:0.0,blending:THREE.AdditiveBlending,depthWrite:false}));
+      glow.position.y=0.1; group.add(glow); glows[e.id]=glow;
+      var hit=new THREE.Mesh(new THREE.TubeGeometry(curve,24,0.9,6,false),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+      hit.userData.edge=e.id; group.add(hit); hits.push(hit);
+    });
+
+    NODE_IDS.forEach(function(id){
+      var g=new THREE.Group(); g.position.copy(v3(id)); group.add(g);
+      var col=NCOL[id];
+      var core=new THREE.Mesh(new THREE.SphereGeometry(0.72,28,20),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.8,roughness:0.3,metalness:0.2})); core.position.y=0.75; g.add(core);
+      var ring=new THREE.Mesh(new THREE.TorusGeometry(1.35,0.045,8,56),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.8})); ring.rotation.x=Math.PI/2; ring.position.y=0.1; g.add(ring);
+      var beam=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,4,6),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.35})); beam.position.y=2.6; g.add(beam);
+      var spr=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTexture(id),transparent:true,depthTest:false})); spr.scale.set(5.4,2.55,1); spr.position.y=5.2; spr.renderOrder=10; g.add(spr);
+      nodes[id]={group:g,core:core,ring:ring,sprite:spr};
+    });
+
+    raycaster=new THREE.Raycaster(); pointer=new THREE.Vector2(); clock=new THREE.Clock();
+    bind(); resize(); ok=true;
+    try{ var ro=new ResizeObserver(resize); ro.observe(host); }catch(e){ window.addEventListener('resize',resize); }
+    try{ var io=new IntersectionObserver(function(en){ visible=en[0].isIntersecting; }); io.observe(host); }catch(e){}
+    loop();
+  }
+  function fail(){ $('#glFallback').style.display='grid'; $('.stagebar').style.display='none'; }
+  function resize(){
+    if(!renderer) return; var w=host.clientWidth||600,h=host.clientHeight||500;
+    renderer.setSize(w,h,false); renderer.domElement.style.width='100%'; renderer.domElement.style.height='100%';
+    camera.aspect=w/h; camera.fov=w/h<0.9?60:42; camera.updateProjectionMatrix();
+  }
+  function setView(v){
+    if(v==='top'){ cam.tph=0.12; cam.tth=-Math.PI/2; cam.tr=30; }
+    else if(v==='side'){ cam.tph=1.42; cam.tth=-Math.PI/2; cam.tr=36; }
+    else { cam.tph=1.0; cam.tth=-0.6; cam.tr=36; }
+  }
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function bind(){
+    var el=renderer.domElement;
+    el.addEventListener('pointerdown',function(e){ ptrs[e.pointerId]={x:e.clientX,y:e.clientY}; try{el.setPointerCapture(e.pointerId);}catch(x){} dragging=true; cam.auto=false; setRotBtn(); lastX=downX=e.clientX; lastY=downY=e.clientY; tipEl.style.display='none'; });
+    el.addEventListener('pointermove',function(e){
+      var n=Object.keys(ptrs).length;
+      if(ptrs[e.pointerId]){
+        ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+        if(n===2){ var k=Object.keys(ptrs),a=ptrs[k[0]],b=ptrs[k[1]],d=Math.hypot(a.x-b.x,a.y-b.y); if(lastPinch) cam.tr=clamp(cam.tr*(lastPinch/d),14,64); lastPinch=d; }
+        else{ cam.tth-= (e.clientX-lastX)*0.0065; cam.tph=clamp(cam.tph-(e.clientY-lastY)*0.0055,0.1,1.5); lastX=e.clientX; lastY=e.clientY; }
+      }else hover(e);
+    });
+    function up(e){ delete ptrs[e.pointerId]; lastPinch=0; if(!Object.keys(ptrs).length) dragging=false; }
+    el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up);
+    el.addEventListener('pointerleave',function(){ tipEl.style.display='none'; });
+    el.addEventListener('wheel',function(e){ if(e.ctrlKey||e.metaKey){ e.preventDefault(); cam.tr=clamp(cam.tr*Math.exp(e.deltaY*0.002),14,64); } },{passive:false});
+    $$('[data-view]').forEach(function(b){ b.addEventListener('click',function(){ cam.auto=false; setRotBtn(); setView(b.dataset.view); }); });
+    $('#btnRot').addEventListener('click',function(){ cam.auto=!cam.auto; setRotBtn(); });
+    $('#zin').addEventListener('click',function(){ cam.tr=clamp(cam.tr*0.8,14,64); });
+    $('#zout').addEventListener('click',function(){ cam.tr=clamp(cam.tr*1.25,14,64); });
+    setRotBtn();
+  }
+  function setRotBtn(){ $('#btnRot').setAttribute('aria-pressed',cam.auto?'true':'false'); $('#btnRot').style.borderColor=cam.auto?'rgba(251,191,36,.6)':''; }
+  function hover(e){
+    if(!A||dragging) return;
+    var rect=renderer.domElement.getBoundingClientRect();
+    pointer.x=((e.clientX-rect.left)/rect.width)*2-1; pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);
+    var r=raycaster.intersectObjects(hits,false);
+    if(!r.length){ tipEl.style.display='none'; return; }
+    var ed=A.byId[r[0].object.userData.edge]; if(!ed) return;
+    tipEl.innerHTML='<b>'+ed.a+'–'+ed.b+'</b> · '+t('tip.edge')+'<br>'+fmt(ed.km,0)+' '+t('km')+' · q='+Math.round(ed.qEff)+' · c='+Math.round(ed.cEff)+'<br>'+t('tip.vc')+' = <b style="color:'+LEVEL_COL[ed.level]+'">'+fmt(ed.x,2)+'</b><br>'+t('tip.time')+': '+fmt(ed.t,1)+' '+t('kpi.min')+' ('+t('tip.free')+' '+fmt(ed.t0,1)+') · '+fmt(ed.speed,0)+' '+t('kmh');
+    tipEl.style.display='block';
+    var sr=$('#stage').getBoundingClientRect(),x=e.clientX-sr.left+14,y=e.clientY-sr.top+14;
+    if(x>sr.width-270) x=e.clientX-sr.left-270; if(y>sr.height-120) y=e.clientY-sr.top-110;
+    tipEl.style.left=Math.max(6,x)+'px'; tipEl.style.top=Math.max(6,y)+'px';
+  }
+  var carGeo=null,carMats=null;
+  function rebuildCars(a){
+    if(!carGeo){ carGeo=new THREE.BoxGeometry(0.62,0.22,0.3); carMats=[0xffffff,0x9ff3ff,0xffe08a,0xc4b5fd].map(function(c){return new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:0.35,roughness:0.4});}); }
+    while(carGroup.children.length) carGroup.remove(carGroup.children[0]); cars=[];
+    a.E.forEach(function(e){
+      var n=Math.max(2,Math.min(40,Math.round(e.qEff/60))), curve=state.edges.filter(function(x){return x.id===e.id;})[0]._curve, i;
+      var uPerSec=e.speed*0.0667/e.km; /* 1 s on screen = 4 min of real time */
+      for(i=0;i<n;i++){
+        var m=new THREE.Mesh(carGeo,carMats[(i+e.km)%4]); carGroup.add(m);
+        cars.push({m:m,curve:curve,u:(i+Math.random()*0.6)/n,dir:i%2?1:-1,sp:uPerSec*(0.85+Math.random()*0.3)});
+      }
+    });
+  }
+  function update(a){
+    if(!ok) return;
+    a.E.forEach(function(e){ var c=new THREE.Color(LEVEL_COL[e.level]); lanes[e.id].material.color.copy(c); lanes[e.id].material.emissive.copy(c); });
+    Object.keys(glows).forEach(function(id){ glows[id].userData.on=a.dT.edgeIds.indexOf(id)>=0; });
+    rebuildCars(a);
+  }
+  var tmpP=new THREE.Vector3(),tmpT=new THREE.Vector3();
+  function placeCar(c){
+    c.curve.getPointAt(c.u,tmpP); c.curve.getTangentAt(c.u,tmpT);
+    var lx=-tmpT.z,lz=tmpT.x,l=Math.hypot(lx,lz)||1,off=c.dir*0.2;
+    c.m.position.set(tmpP.x+lx/l*off,0.3,tmpP.z+lz/l*off);
+    c.m.rotation.y=Math.atan2(-tmpT.z,tmpT.x)+(c.dir<0?Math.PI:0);
+  }
+  function loop(){
+    requestAnimationFrame(loop);
+    var dt=Math.min(clock.getDelta(),0.05),tm=clock.elapsedTime;
+    if(!visible||document.hidden) return;
+    if(cam.auto) cam.tth+=dt*0.12;
+    var k=1-Math.pow(0.001,dt);
+    cam.th+=(cam.tth-cam.th)*k; cam.ph+=(cam.tph-cam.ph)*k; cam.r+=(cam.tr-cam.r)*k;
+    camera.position.set(cam.target.x+cam.r*Math.sin(cam.ph)*Math.cos(cam.th),cam.target.y+cam.r*Math.cos(cam.ph),cam.target.z+cam.r*Math.sin(cam.ph)*Math.sin(cam.th));
+    camera.lookAt(cam.target);
+    cars.forEach(function(c){ c.u+=c.dir*c.sp*dt; if(c.u>1)c.u-=1; if(c.u<0)c.u+=1; placeCar(c); });
+    NODE_IDS.forEach(function(id,i){ var n=nodes[id]; n.ring.rotation.z=tm*0.8+i; n.ring.scale.setScalar(1+Math.sin(tm*2+i)*0.06); n.core.position.y=0.75+Math.sin(tm*1.6+i)*0.08; });
+    Object.keys(glows).forEach(function(id){ var g=glows[id]; g.material.opacity=g.userData.on?0.16+Math.sin(tm*3)*0.07:0; });
+    renderer.render(scene,camera);
+  }
+  return {init:init,update:update,relabel:relabel,ok:function(){return ok;}};
+})();
+
+/* ================= CONTROLS ================= */
+function bindControls(){
+  $('#mult').addEventListener('input',function(){ state.mult=parseFloat(this.value)||1; update(); });
+  $('#capf').addEventListener('input',function(){ state.capF=(parseFloat(this.value)||100)/100; update(); });
+  $$('[data-preset]').forEach(function(b){ b.addEventListener('click',function(){
+    var p=b.dataset.preset; state.mult=p==='peak'?1.5:1; state.capF=p==='work'?0.5:1;
+    $('#mult').value=state.mult; $('#capf').value=Math.round(state.capF*100); update();
+  }); });
+  $('#edgeBody').addEventListener('input',function(e){
+    var el=e.target; if(!el.dataset.edge) return;
+    var v=parseFloat(el.value), lo=parseFloat(el.min), hi=parseFloat(el.max);
+    if(!isFinite(v)||v<lo||v>hi){ el.classList.add('bad'); return; }
+    el.classList.remove('bad');
+    state.edges.forEach(function(ed){ if(ed.id===el.dataset.edge) ed[el.dataset.f]=v; });
+    update();
+  });
+  $('#resetEdges').addEventListener('click',function(){
+    var keep={}; state.edges.forEach(function(e){keep[e.id]=e._curve;});
+    state.edges=cloneEdges(DEFAULT_EDGES); state.edges.forEach(function(e){e._curve=keep[e.id];});
+    renderEdgeTable(); update();
+  });
+  $('#btnReport').addEventListener('click',downloadReport);
+}
+
+function downloadReport(){
+  var a=A,L=[];
+  L.push('# '+t('hero.title'),'');
+  L.push('- '+t('ctrl.mult')+': ×'+fmt(state.mult,2),'- '+t('ctrl.capf')+': '+Math.round(state.capF*100)+'%','');
+  L.push('| '+t('tbl.edge')+' | km | q | c | v/c | t₀ ('+t('kpi.min')+') | t ('+t('kpi.min')+') | '+t('kmh')+' |','|---|---|---|---|---|---|---|---|');
+  a.E.forEach(function(e){ L.push('| '+e.a+'–'+e.b+' | '+fmt(e.km,0)+' | '+Math.round(e.qEff)+' | '+Math.round(e.cEff)+' | '+fmt(e.x,2)+' | '+fmt(e.t0,1)+' | '+fmt(e.t,1)+' | '+fmt(e.speed,0)+' |'); });
+  L.push('',
+    '- '+t('route.main')+': '+fmt(a.main.km,0)+' '+t('km')+', '+fmt(a.main.t,1)+' '+t('kpi.min'),
+    '- '+t('route.alt')+': '+fmt(a.alt.km,0)+' '+t('km')+', '+fmt(a.alt.t,1)+' '+t('kpi.min'),
+    '- '+t('dj.km')+': '+pathStr(a.dK.path)+' ('+fmt(a.dK.total,0)+' '+t('km')+')',
+    '- '+t('dj.time')+': '+pathStr(a.dT.path)+' ('+fmt(a.dT.total,1)+' '+t('kpi.min')+')','',
+    '> '+t('model.note'));
+  var blob=new Blob([L.join('\n')],{type:'text/markdown;charset=utf-8'}),url=URL.createObjectURL(blob),l=document.createElement('a');
+  l.href=url; l.download='graphroad-report.md'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+/* ================= AI ================= */
+var history=[],pending=false;
+var MODEL_RE=/^[a-zA-Z0-9._-]{3,64}$/;
+function store(k,v){ try{ if(v==null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+function load(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+function getModel(){ var s=$('#model').value; if(s==='custom'){ var c=$('#customModel').value.trim(); return MODEL_RE.test(c)?c:'gemini-2.5-flash'; } return s; }
+function getKey(){ return $('#apiKey').value.trim(); }
+function inlineMd(s){ return s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>'); }
+function md(src){
+  var lines=esc(src).split('\n'),out='',inL=false;
+  lines.forEach(function(ln){
+    var m=ln.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)$/);
+    if(m){ if(!inL){out+='<ul>';inL=true;} out+='<li>'+inlineMd(m[1])+'</li>'; return; }
+    if(inL){out+='</ul>';inL=false;}
+    if(!ln.trim()) return;
+    if(/^#{1,4}\s/.test(ln)) out+='<h4>'+inlineMd(ln.replace(/^#{1,4}\s*/,''))+'</h4>'; else out+='<p>'+inlineMd(ln)+'</p>';
+  });
+  if(inL) out+='</ul>'; return out;
+}
+function addMsg(cls,html){
+  var d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html;
+  var box=$('#msgs'); box.appendChild(d); box.scrollTop=box.scrollHeight; return d;
+}
+function refreshStatus(){
+  var on=!!getKey(),s=$('#aiStatus'); s.className='status'+(on?' on':''); $('span',s).textContent=on?t('ai.on')+' · '+getModel():t('ai.off');
+}
+function contextData(){
+  var a=A; function r1(n){return Math.round(n*10)/10;} function r2(n){return Math.round(n*100)/100;}
+  return {loadMultiplierOnMainRoute:r2(state.mult),capacityFactorOnMainRoute:r2(state.capF),
+    edges:a.E.map(function(e){return {edge:e.a+'-'+e.b,route:e.route,km:e.km,vehPerHour:Math.round(e.qEff),capacity:Math.round(e.cEff),freeFlowKmh:e.v0,vcRatio:r2(e.x),freeFlowMin:r1(e.t0),actualMin:r1(e.t),avgKmh:r1(e.speed)};}),
+    mainRoute:{path:'A-B-C-D',km:a.main.km,minutes:r1(a.main.t)},altRoute:{path:'A-E-D',km:a.alt.km,minutes:r1(a.alt.t)},
+    shortestByDistance:{path:a.dK.path.join('-'),km:a.dK.total},fastestByTime:{path:a.dT.path.join('-'),minutes:r1(a.dT.total)},
+    crossoverLoadMultiplier:a.cross.kind==='cross'?r2(a.cross.m):a.cross.kind};
+}
+function systemPrompt(){
+  return 'You are the assistant of a school science project: "Optimization of traffic flow on the Aktobe–Khromtau highway using graph theory" (Kazakhstan).\n'+
+  'Project facts (from the slides): vertices A=Aktobe, B=Ulke, C=Novorossiyskoye, D=Khromtau; edges A–B 34 km, B–C 24 km, C–D 32 km (total 90 km); traffic intensity 500, 650, 700 vehicles/hour; Euler 1736 Königsberg bridges; the key conclusion is that a road must not be judged by distance alone — traffic density and capacity matter too (a 90 km route may be worse than a 95 km one under heavy load).\n'+
+  'Model: edge weight = travel time by the BPR function t = t0*(1+0.15*(q/c)^4); Dijkstra finds the fastest route. IMPORTANT: capacities, free-flow speeds and the alternative 95 km route (A–E–D) are ILLUSTRATIVE ASSUMPTIONS, not measured data — say so when relevant, and never invent real traffic statistics.\n'+
+  'Answer in '+(lang==='kk'?'Kazakh (қазақ тілі)':'Russian')+'. Be concise and clear for a school student: short paragraphs or bullet points, no more than ~250 words unless asked. Use the live model state below.\n'+
+  'LIVE MODEL STATE (JSON): '+JSON.stringify(contextData());
+}
+function localAnalysis(){
+  var a=A,w=a.main.worst,w2=a.alt.worst,worst=w.x>=w2.x?w:w2;
+  var parts=[t('local.1',{mk:fmt(a.main.km,0),mt:fmt(a.main.t,1),ms:fmt(a.main.speed,0),ak:fmt(a.alt.km,0),at:fmt(a.alt.t,1)}),
+    t('local.2',{e:worst.a+'–'+worst.b,x:fmt(worst.x,2),lvl:t('lvl.'+worst.level)}),
+    t('local.3',{r1:pathStr(a.dK.path)+' ('+fmt(a.dK.total,0)+' '+t('km')+')',r2:pathStr(a.dT.path)+' ('+fmt(a.dT.total,1)+' '+t('kpi.min')+')'}),
+    t('local.4')];
+  return '**'+t('local.tag')+'**\n- '+parts.join('\n- ');
+}
+function errText(status,msg){
+  msg=String(msg||'');
+  if(status===400&&/api key|API_KEY/i.test(msg)) return t('err.key');
+  if(status===401) return t('err.key'); if(status===403) return t('err.perm'); if(status===404) return t('err.model'); if(status===429) return t('err.quota');
+  return t('err.gen')+(status?' '+status:'')+(msg?': '+esc(msg.slice(0,300)):'');
+}
+function callGemini(text){
+  var key=getKey(),model=getModel();
+  history.push({role:'user',parts:[{text:text}]}); if(history.length>16) history=history.slice(-16);
+  var ctrl=new AbortController(),to=setTimeout(function(){ctrl.abort();},60000);
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
+    method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},signal:ctrl.signal,
+    body:JSON.stringify({systemInstruction:{parts:[{text:systemPrompt()}]},contents:history,generationConfig:{temperature:0.6,maxOutputTokens:2048}})
+  }).then(function(res){
+    return res.json().catch(function(){return {};}).then(function(j){
+      clearTimeout(to);
+      if(!res.ok){ history.pop(); var e=new Error((j.error&&j.error.message)||''); e.status=res.status; throw e; }
+      var c=j.candidates&&j.candidates[0], txt='';
+      if(c&&c.content&&c.content.parts) txt=c.content.parts.filter(function(p){return !p.thought&&p.text;}).map(function(p){return p.text;}).join('');
+      if(!txt){ history.pop(); var e2=new Error(''); e2.kind=(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&c.finishReason==='SAFETY')?'block':'empty'; throw e2; }
+      history.push({role:'model',parts:[{text:txt}]}); return txt;
+    });
+  },function(err){ clearTimeout(to); history.pop(); var e=new Error(''); e.kind=err&&err.name==='AbortError'?'timeout':'net'; throw e; });
+}
+function ask(text){
+  text=(text||'').trim(); if(!text||pending) return;
+  addMsg('user',md(text));
+  if(!getKey()){ addMsg('bot',md(localAnalysis())); addMsg('sys',esc(t('ai.nokey'))); return; }
+  pending=true; $('#send').disabled=true;
+  var typing=addMsg('bot','<span class="dots"><i></i><i></i><i></i></span>');
+  callGemini(text).then(function(ans){ typing.innerHTML=md(ans); },function(e){
+    typing.className='msg err';
+    typing.innerHTML=e.status?errText(e.status,e.message):e.kind==='timeout'?t('err.timeout'):e.kind==='block'?t('err.block'):e.kind==='empty'?t('err.empty'):t('err.net');
+  }).then(function(){ pending=false; $('#send').disabled=false; $('#msgs').scrollTop=$('#msgs').scrollHeight; });
+}
+function renderChips(){
+  $('#qs').innerHTML=['q1','q2','q3','q4','q5'].map(function(k){ return '<button type="button" data-q="'+k+'">'+esc(t(k))+'</button>'; }).join('');
+}
+function bindAI(){
+  $('#apiKey').value=load('gr_key'); var m=load('gr_model');
+  if(m){ var has=$$('#model option').some(function(o){return o.value===m;}); if(has) $('#model').value=m; else if(MODEL_RE.test(m)){ $('#model').value='custom'; $('#customModel').value=m; $('#customModel').style.display='block'; } }
+  $('#model').addEventListener('change',function(){ $('#customModel').style.display=this.value==='custom'?'block':'none'; refreshStatus(); });
+  $('#customModel').addEventListener('input',refreshStatus); $('#apiKey').addEventListener('input',refreshStatus);
+  $('#showKey').addEventListener('click',function(){ var i=$('#apiKey'); i.type=i.type==='password'?'text':'password'; });
+  $('#saveKey').addEventListener('click',function(){ store('gr_key',getKey()||null); store('gr_model',getModel()); refreshStatus(); addMsg('sys',esc(t('ai.saved'))); });
+  $('#clearKey').addEventListener('click',function(){ $('#apiKey').value=''; store('gr_key',null); refreshStatus(); addMsg('sys',esc(t('ai.forgot'))); });
+  $('#clearChat').addEventListener('click',function(){ history=[]; $('#msgs').innerHTML=''; addMsg('sys',esc(t('ai.cleared'))); });
+  $('#qs').addEventListener('click',function(e){ var b=e.target.closest('button[data-q]'); if(b) ask(t(b.dataset.q)); });
+  var ta=$('#prompt');
+  $('#composer').addEventListener('submit',function(e){ e.preventDefault(); var v=ta.value; ta.value=''; ta.style.height='auto'; ask(v); });
+  ta.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); $('#composer').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true})); } });
+  ta.addEventListener('input',function(){ ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight,140)+'px'; });
+  addMsg('sys',esc(t('ai.hello'))); refreshStatus();
+}
+
+/* ================= LANGUAGE ================= */
+function applyLang(){
+  document.documentElement.lang=lang; document.title=t('meta.title');
+  $$('[data-i18n]').forEach(function(el){ el.innerHTML=t(el.dataset.i18n); });
+  $$('[data-i18n-ph]').forEach(function(el){ el.placeholder=t(el.dataset.i18nPh); });
+  $$('.lang button').forEach(function(b){ b.setAttribute('aria-pressed',b.dataset.lang===lang?'true':'false'); });
+  renderChips(); refreshStatus();
+}
+function setLang(l){
+  lang=l; store('gr_lang',l); applyLang(); renderEdgeTable(); update(); Scene3D.relabel();
+}
+
+/* If a mobile browser blocks one optional feature, keep the page readable. */
+function emergencyText(){
+  var dict=I18N[lang]||I18N.ru;
+  $$('[data-i18n]').forEach(function(el){
+    var key=el.getAttribute('data-i18n');
+    if(dict[key]) el.innerHTML=dict[key];
+  });
+  $$('[data-i18n-ph]').forEach(function(el){
+    var key=el.getAttribute('data-i18n-ph');
+    if(dict[key]) el.placeholder=dict[key];
+  });
+  var qs=$('#qs');
+  if(qs) qs.innerHTML=['q1','q2','q3','q4','q5'].map(function(k){return '<button type="button">'+esc(dict[k]||k)+'</button>';}).join('');
+}
+
+/* ================= BOOT ================= */
+function boot(){
+  try{
+    $$('.lang button').forEach(function(b){ b.addEventListener('click',function(){ setLang(b.dataset.lang); }); });
+    applyLang(); renderEdgeTable(); bindControls(); bindAI();
+    Scene3D.init(); update();
+  }catch(e){
+    console.error('GraphRoad startup error:',e);
+    emergencyText();
+  }
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+window.__GR={t:t,I18N:I18N,analyze:analyze,state:state};
+})();
+</script>
+</body>
+</html>
